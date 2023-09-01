@@ -1,0 +1,222 @@
+// This is your Prisma schema file,
+// learn more about it in the docs String https String//pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CAM {
+  cas_id           String       @id @unique
+  cas_type         String?
+  file_type        String?
+  address          String?
+  email            String?
+  name             String?
+  mobile           String?
+  statement_period Json?
+  folios           CAM_Folios[]
+}
+
+model CAM_Folios {
+  cas_id  String
+  cas     CAM           @relation(fields: [cas_id], references: [cas_id])
+  kyc     String?
+  pan     String?
+  pankyc  String?
+  amc     String?
+  folio   String        @id @unique
+  schemes CAM_Schemes[]
+}
+
+model CAM_Schemes {
+  advisor          String?
+  amfi             String?
+  close            String?
+  close_calculated String?
+  isin             String             @unique
+  open             String?
+  rta              String?
+  rta_code         String?
+  scheme           String?
+  folio            CAM_Folios         @relation(fields: [folio_id], references: [folio])
+  folio_id         String
+  transactions     CAM_Transactions[]
+  type             String?
+  valuation        Json?
+}
+
+model CAM_Transactions {
+  id              Int         @id @default(autoincrement())
+  scheme          CAM_Schemes @relation(fields: [trans_scheme_id], references: [isin])
+  trans_scheme_id String
+  amount          String?
+  balance         String?
+  date            String?
+  description     String?
+  dividend_rate   String?
+  nav             String?
+  type            String?
+  units           String?
+}
+
+///////////////////////// Invertor Info  \\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+model InvestorInfo {
+  id              String        @id @default(uuid())
+  Address         String?
+  Name            String?
+  PinCode         String?
+  StatementPeriod Json?
+  accountInfo     AccountInfo[]
+  cdslInfo        CdslInfo[]
+  nsdlInfo        NsdlInfo[]
+  mutualFundFolioInfo MutualFundFolioInfo[]
+}
+
+model AccountInfo {
+  id             String       @id @default(uuid())
+  investorInfo   InvestorInfo @relation(fields: [investorInfoId], references: [id])
+  investorInfoId String
+  GrandTotal     String?
+  TotalAccount   String?
+  accounts       Accounts[]
+}
+
+model Accounts {
+  id            String      @id @default(uuid())
+  accountInfo   AccountInfo @relation(fields: [accountInfoId], references: [id])
+  accountInfoId String
+  AccountClass  String?
+  AccountType   String?
+  Value         String?
+}
+
+///////////////////////// CDSL \\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+model CdslInfo {
+  id           String          @id @default(uuid())
+  investorInfo InvestorInfo    @relation(fields: [investorInfoId], references: [id])
+  investorInfoId String
+  TotalAccount String?
+  TotalValue   String?
+  Accounts     Cdsl_Accounts[]
+}
+
+model Cdsl_Accounts {
+  id             String   @id @default(uuid())
+  cdslInfo       CdslInfo @relation(fields: [cdslInfoId], references: [id])
+  cdslInfoId     String
+  Account_Status String?
+  BO_ID          String?
+  BO_Status      String?
+  BO_Sub_Status  String?
+  BO_Sub_Type    String?
+  BO_Type       String?
+  BSDA           String?
+  DP_Name        String?
+  DPID          String?
+  Email_Id       String?
+  Frozen_Status  String?
+  Mobile_No      String?
+  Nominee        String?
+  RGESS          String?
+  TotalEquity   String?
+  TotalValue   String?
+  EquityList     Cdsl_Equities[]
+}
+
+model Cdsl_Equities {
+  id             String        @id @default(uuid())
+  cdslAccount    Cdsl_Accounts @relation(fields: [cdslEquityId], references: [id])
+  cdslEquityId  String
+  CurrentBalance String?
+  Isin           String?
+  IsinName       String?
+  Value          String?
+}
+
+///////////////////////// NSDL \\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+model NsdlInfo {
+  id           String          @id @default(uuid())
+  TotalAccount String?
+  TotalValue   String?
+  investorInfo InvestorInfo    @relation(fields: [investorInfoId], references: [id])
+  investorInfoId String
+  Accounts     Nsdl_Accounts[]
+}
+
+model Nsdl_Accounts {
+  id             String          @id @default(uuid())
+  nsdlInfo       NsdlInfo        @relation(fields: [nsdlInfoId], references: [id])
+  nsdlInfoId     String
+  Account_Status String?
+  BO_ID          String?
+  BO_Status      String?
+  BO_Sub_Status  String?
+  BO_Sub_Type    String?
+  BO_Type        String?
+  BSDA           String?
+  ClientId       String?
+  DP_Name        String?
+  DPID           String?
+  Email_Id       String?
+  Frozen_Status  String?
+  Mobile_No      String?
+  Nominee        String?
+  RGESS          String?
+  TotalEquity   String?
+  TotalValue   String?
+  EquityList     Nsdl_Equities[]
+}
+
+model Nsdl_Equities {
+  id             String        @id @default(uuid())
+  nsdlAccount    Nsdl_Accounts @relation(fields: [nsdlAccountId], references: [id])
+  nsdlAccountId  String
+  CurrentBalance String?
+  Isin           String?
+  IsinName       String?
+  Value          String?
+}
+
+///////////////////////// MutualFundFolioInfo \\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+model MutualFundFolioInfo {
+  id           String                @id @default(uuid())
+  TotalAccount String?
+  TotalValue   String?
+  investorInfo InvestorInfo          @relation(fields: [investorInfoId], references: [id])
+  investorInfoId String
+  Accounts     MutualFund_Accounts[]
+}
+
+model MutualFund_Accounts {
+  id                    String                @id @default(uuid())
+  mutualFundFolioInfo   MutualFundFolioInfo   @relation(fields: [mutualFundFolioInfoId], references: [id])
+  mutualFundFolioInfoId String
+  AccountClass          String?
+  AccountType           String?
+  Value                 String?
+  TotalMutualFundFolio  String?
+  MutualFundFolioList   MutualFundFolioList[]
+}
+
+model MutualFundFolioList {
+  id                    String                @id @default(uuid())
+  mutualFundAccount     MutualFund_Accounts   @relation(fields: [mutualFundAccountId], references: [id])
+  mutualFundAccountId   String
+  ArnCode String?  
+  ClosingBalance String?  
+  FolioNumber String?  
+  InvestmentValue String?  
+  Isin String?  
+  IsinName String? 
+  Nav String?  
+  Value String?  
+}
